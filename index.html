@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nebula-7 AI Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white font-sans h-screen flex flex-col">
+
+    <div class="p-6 border-b border-gray-700 bg-gray-800">
+        <h1 class="text-2xl font-bold text-blue-400">🚀 Nebula-7 Knowledge Base</h1>
+        <p class="text-sm text-gray-400">Connected to Gemma 3 4B (Local)</p>
+    </div>
+
+    <div id="chat-window" class="flex-1 overflow-y-auto p-6 space-y-4">
+        <div class="bg-gray-800 p-3 rounded-lg max-w-xs">
+            Hello! Ask me anything about the Nebula-7 project.
+        </div>
+    </div>
+
+    <div class="p-4 bg-gray-800 border-t border-gray-700">
+        <div class="max-w-4xl mx-auto flex gap-4">
+            <input type="text" id="user-input" placeholder="Type your question..." 
+                   class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
+            <button onclick="sendQuery()" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg font-bold transition">
+                Send
+            </button>
+        </div>
+    </div>
+
+    <script>
+        async function sendQuery() {
+            const inputField = document.getElementById('user-input');
+            const chatWindow = document.getElementById('chat-window');
+            const question = inputField.value;
+            if (!question) return;
+
+            // Add User Message to UI
+            chatWindow.innerHTML += `<div class="flex justify-end"><div class="bg-blue-600 p-3 rounded-lg max-w-xs">${question}</div></div>`;
+            inputField.value = '';
+
+            // Loading state
+            const loadingId = Date.now();
+            chatWindow.innerHTML += `<div id="${loadingId}" class="bg-gray-800 p-3 rounded-lg max-w-xs animate-pulse">Thinking...</div>`;
+
+            try {
+                const response = await fetch('http://localhost:8000/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: question })
+                });
+                const data = await response.json();
+                
+                // Replace loading with AI response
+                document.getElementById(loadingId).innerText = data.answer;
+                document.getElementById(loadingId).classList.remove('animate-pulse');
+            } catch (error) {
+                document.getElementById(loadingId).innerText = "Error: Is the FastAPI server running?";
+            }
+            
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+    </script>
+</body>
+</html>
